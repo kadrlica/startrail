@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(pytest:*)",
+      "Bash(pip:*)",
+      "Bash(conda:*)",
+      "Bash(mamba:*)",
+      "Bash(jupyter:*)",
+      "Bash(git:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,sys,subprocess,os; d=json.load(sys.stdin); fp=(d.get('tool_input') or {}).get('file_path') or (d.get('tool_input') or {}).get('notebook_path',''); subprocess.run(['jupyter','nbconvert','--to','html','--execute',fp],check=True) if fp and fp.endswith('.ipynb') and os.path.exists(fp) else None\" 2>/dev/null || true",
+            "timeout": 120,
+            "statusMessage": "Executing notebook and converting to HTML..."
+          }
+        ]
+      }
+    ]
+  }
+}
