@@ -10,11 +10,10 @@ def make_trail(
     """Generate a star trail image.
 
     The trail is modelled as the integral of a Gaussian PSF along the star's
-    path during CCD readout.  Jitter is perpendicular to the nominal trail
-    direction and follows an Ornstein-Uhlenbeck process when ``tau`` is given,
-    modelling a telescope guider that provides a restoring force back toward
-    the nominal pointing on a characteristic timescale ``tau`` (pixels along
-    the trail).  When ``tau`` is ``None`` the jitter is a pure random walk.
+    path during CCD readout.  Jitter is isotropic: independent OU processes
+    in x and y model a telescope guider that restores pointing on a
+    characteristic timescale ``tau`` (pixels along the trail).  When ``tau``
+    is ``None`` the jitter is a pure random walk in each axis.
 
     Parameters
     ----------
@@ -30,9 +29,11 @@ def make_trail(
     flux : float
         Total trail flux in counts.
     jitter_sigma : float
-        Steady-state RMS jitter amplitude in pixels perpendicular to the
-        trail.  For the OU model this is the equilibrium standard deviation;
-        for the random-walk model it is the per-unit-length diffusion
+        Per-axis steady-state RMS jitter amplitude in pixels.  Jitter is
+        isotropic: independent OU (or random-walk) processes are applied in
+        x and y so the displacement distribution is azimuthally symmetric.
+        For the OU model this is the equilibrium standard deviation of each
+        axis; for the random-walk model it is the per-unit-length diffusion
         coefficient.
     tau : float or None
         Guider timescale in pixels along the trail.  The star is pulled back
@@ -54,22 +55,24 @@ def make_trail(
     sin_a = np.sin(angle)
     cos_a = np.cos(angle)
 
-    # Perpendicular jitter
+    # Isotropic 2D jitter — independent OU (or random-walk) processes in x and y
     if jitter_sigma > 0.0 and n_steps > 1:
         dt = abs(t_vals[1] - t_vals[0])
-        jitter = np.zeros(n_steps)
         if tau is not None:
             # Ornstein-Uhlenbeck: exact discretisation with e-folding length tau.
-            # Steady-state variance == jitter_sigma^2.
+            # Steady-state variance == jitter_sigma^2 per axis.
             decay = np.exp(-dt / tau)
             drive = jitter_sigma * np.sqrt(1.0 - decay ** 2)
+            jx = np.zeros(n_steps)
+            jy = np.zeros(n_steps)
             for i in range(1, n_steps):
-                jitter[i] = decay * jitter[i - 1] + drive * rng.normal()
+                jx[i] = decay * jx[i - 1] + drive * rng.normal()
+                jy[i] = decay * jy[i - 1] + drive * rng.normal()
         else:
             # Pure random walk (no guiding correction)
-            jitter = np.cumsum(rng.normal(0.0, jitter_sigma * np.sqrt(dt), n_steps))
-        jx = jitter * cos_a
-        jy = jitter * (-sin_a)
+            step_sigma = jitter_sigma * np.sqrt(dt)
+            jx = np.cumsum(rng.normal(0.0, step_sigma, n_steps))
+            jy = np.cumsum(rng.normal(0.0, step_sigma, n_steps))
     else:
         jx = jy = np.zeros(n_steps)
 
