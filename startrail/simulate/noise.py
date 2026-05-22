@@ -1,6 +1,23 @@
 import numpy as np
 
 
+def add_poisson_noise(image, seed=None):
+    """Apply Poisson sampling to a noiseless signal image.
+
+    Parameters
+    ----------
+    image : numpy.ndarray
+        Noiseless signal in counts (must be non-negative).
+    seed : int or None
+
+    Returns
+    -------
+    numpy.ndarray
+    """
+    rng = np.random.default_rng(seed)
+    return rng.poisson(np.maximum(image, 0)).astype(float)
+
+
 def add_sky(image, sky_level, seed=None):
     """Add Poisson-distributed sky background to an image.
 

@@ -1,7 +1,7 @@
 import numpy as np
 
 from .trail import make_trail
-from .noise import add_sky, add_read_noise, add_bias
+from .noise import add_poisson_noise, add_sky, add_read_noise, add_bias
 
 
 def make_image(
@@ -59,6 +59,7 @@ def make_image(
             seed=trail_seed,
         )
 
+    image = add_poisson_noise(image, seed=int(rng.integers(0, 2**31)))
     image = add_sky(image, sky_level, seed=int(rng.integers(0, 2**31)))
     image = add_read_noise(image, read_noise, seed=int(rng.integers(0, 2**31)))
     image = add_bias(image, bias)
