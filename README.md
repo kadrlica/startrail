@@ -54,22 +54,6 @@ catalog = fit_image(image, sources)
 print(catalog['x0', 'y0', 'angle', 'length', 'flux'])
 ```
 
-## Package structure
-
-```
-startrail/
-├── simulate/
-│   ├── psf.py       # Gaussian and Moffat PSF models
-│   ├── trail.py     # Trail generation (PSF × line kernel + OU jitter)
-│   ├── noise.py     # Poisson, sky, read noise, bias
-│   └── image.py     # Multi-star image assembly
-├── models.py        # TrailModel dataclass (forward model)
-├── detect.py        # Source detection (photutils wrapper)
-├── fit.py           # Trail fitting → astropy Table
-├── io.py            # FITS and catalog I/O
-└── utils.py         # Coordinate helpers
-```
-
 ## Development
 
 ```bash
